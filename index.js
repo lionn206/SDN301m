@@ -1,52 +1,46 @@
-const http = require("http");
+const MongoClient = require("mongodb").MongoClient;
+const assert = require("assert");
+const url = "mongodb://localhost:27017/";
+const dbname = "conFusion";
+const dboper = require("./routes/operations");
+MongoClient.connect(url, (err, client) => {
+  assert.equal(err, null);
 
-const hostname = "localhost";
-const port = 3000;
-const fs = require('fs');
-const path = require('path');
-const express = require('express');
-const app = express();
-const morgan = require('morgan');
-const bodyParser = require('body-parser');
+  console.log("Connected correctly to server");
 
+  const db = client.db(dbname);
+  //const collection = db.collection("dishes");
 
-app.use(morgan('dev'));
+  dboper.insertDocument(
+    db,
+    { name: "Com Chay", description: "Chay Com" },
+    "dishes",
+    (result) => {
+      console.log("Insert Document:\n", result.ops);
 
-app.use(express.static(__dirname + '/public'));
+      dboper.findDocuments(db, "dishes", (docs) => {
+        console.log("Found Documents:\n", docs);
 
-// app.use((req, res, next) => {
-//   console.log(req.headers);
-//   res.statusCode = 200;
-//   res.setHeader('Content-Type', 'text/html');
-//   res.end('<html><body><h1>This is an Express Server</h1></body></html>');
-// });
+        dboper.updateDocument(
+          db,
+          { name: "Uthappizza" },
+          { description: "Updated Test 1" },
+          "dishes",
+          (result) => {
+            console.log("Updated Document:\n", result.result);
 
-app.use(bodyParser.json());
+            dboper.findDocuments(db, "dishes", (docs) => {
+              console.log("Found Updated Documents:\n", docs);
 
-const dishRouter = require('./routes/dishRouter');
-app.use('/dishes',dishRouter);
+              // db.dropCollection("dishes", (result) => {
+              //   console.log("Dropped Collection: ", result);
 
-
-app.get('/dishes/:dishId', (req,res,next)=>{
-  res.end('Will send details of the dish:' + req.params.dishId + ' to you!');
-});
-
-app.post('/dishes/:dishId', (req,res,next)=>{
-  res.statusCode = 403;
-  res.end('POST operation not supported on /dishes/'+ req.params.dishId);
-});
-
-app.put('/dishes/:dishId', (req,res,next)=>{
-  res.write('Updating the dish:' +req.params.dishId+'\n');
-  res.end('Will update the dish:' +req.body.name+ 'with details: ' +req.body.description)
-});
-
-app.delete('/dishes/:dishId', (req, res, next) => {
-  res.end('Deleting dish: ' + req.params.dishId);
-});
-
-const server = http.createServer(app);
-
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+              //   client.close();
+              // });
+            });
+          }
+        );
+      });
+    }
+  );
 });
