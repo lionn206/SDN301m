@@ -14,10 +14,24 @@
   var FileStore = require('session-file-store')(session);
   const indexRouter = require('./routes/index.js');
   const usersRouter = require('./routes/userRouter.js');
+  const passport = require('passport');
+  const authenticate = require('./authentication.js');
 
-
-  app.use('/', indexRouter);
-  app.use('/users', usersRouter);
+  app.use(session({
+    name: 'session-id',
+    secret: '12345-67890-09876-54321',
+    saveUninitialized: false,
+    resave: false,
+    store: new FileStore()
+    }));
+    
+    
+    app.use(passport.initialize());
+    app.use(passport.session());
+    
+    app.use('/', indexRouter);
+    app.use('/users', usersRouter);
+    app.use(auth);
   app.use('/dishes', dishRouter);
 
   connect.then(
@@ -29,40 +43,20 @@
     }
   );
 
-  app.use(session({
-    name: 'session-id',
-    secret: '12345-67890-09876-54321',
-    saveUninitialized: false,
-    resave: false,
-    store: new FileStore()
-  }));
-
 
   function auth (req, res, next) {
-    console.log(req.session);
-
-  if(!req.session.user) {
-      var err = new Error('You are not authenticated!');
-      err.status = 403;
-      return next(err);
+      console.log(req.user);
+  
+      if (!req.user) {
+        var err = new Error('You are not authenticated!');
+        err.status = 403;
+        next(err);
+      }
+      else {
+            next();
+      }
   }
-  else {
-    if (req.session.user === 'authenticated') {
-      next();
-    }
-    else {
-      var err = new Error('You are not authenticated!');
-      err.status = 403;
-      return next(err);
-    }
-  }
-  }
-
-
-
-
-  app.use(auth);
-
+  
 
   app.listen(port, () => {
       console.log(`Server is running on http://localhost:${port}`)
