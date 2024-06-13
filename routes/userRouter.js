@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const User = require("../models/user");
 const userRouter = express.Router();
 const passport = require("passport");
+const authenticate = require("../authentication");
 userRouter.use(bodyParser.json());
 
 userRouter.post("/signup", (req, res, next) => {
@@ -24,12 +25,12 @@ userRouter.post("/signup", (req, res, next) => {
     }
   );
 });
-userRouter.post("/login", passport.authenticate("local"), (req, res) => {
+userRouter.post('/login', passport.authenticate('local'), (req, res) => {
+  var token = authenticate.getToken({_id: req.user._id});
   res.statusCode = 200;
-  res.setHeader("Content-Type", "application/json");
-  res.json({ success: true, status: "You are successfully logged in!" });
+  res.setHeader('Content-Type', 'application/json');
+  res.json({success: true, token: token, status: 'You are successfully logged in!'});
 });
-
 userRouter.get("/logout", (req, res, next) => {
   if (req.session) {
     req.session.destroy((err) => {

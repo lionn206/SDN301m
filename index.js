@@ -16,7 +16,8 @@
   const usersRouter = require('./routes/userRouter.js');
   const passport = require('passport');
   const authenticate = require('./authentication.js');
-
+  const config = require('./config/config.js');
+  //const url = config.mongoUrl;
   app.use(session({
     name: 'session-id',
     secret: '12345-67890-09876-54321',
@@ -56,8 +57,6 @@
             next();
       }
   }
-  
-
   app.listen(port, () => {
       console.log(`Server is running on http://localhost:${port}`)
   });
